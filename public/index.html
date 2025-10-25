@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RBAC Demo - Role-Based Access Control</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #f0f0f0;
+        }
+        
+        .section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .login-form {
+            display: grid;
+            gap: 15px;
+            max-width: 400px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        
+        select, input, button {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        select:focus, input:focus {
+            outline: none;
+            border-color: #4facfe;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .demo-users {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .demo-users h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .user-card {
+            background: white;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border-left: 4px solid #4facfe;
+        }
+        
+        .routes-section {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .route-button {
+            padding: 15px;
+            background: #f8f9fa;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .route-button:hover {
+            background: #e9ecef;
+            border-color: #4facfe;
+        }
+        
+        .route-button.admin {
+            border-left: 4px solid #dc3545;
+        }
+        
+        .route-button.moderator {
+            border-left: 4px solid #ffc107;
+        }
+        
+        .route-button.user {
+            border-left: 4px solid #28a745;
+        }
+        
+        .response {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .response.success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        
+        .response.error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        
+        .token-display {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            color: #0056b3;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            word-break: break-all;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 RBAC Demo</h1>
+            <p>Role-Based Access Control with JWT Authentication</p>
+        </div>
+        
+        <div class="content">
+            <!-- Login Section -->
+            <div class="section">
+                <h2>🚪 Login</h2>
+                
+                <div class="demo-users">
+                    <h3>Demo Users:</h3>
+                    <div class="user-card">
+                        <strong>Admin:</strong> admin@example.com / admin123
+                    </div>
+                    <div class="user-card">
+                        <strong>Moderator:</strong> mod@example.com / moderator123
+                    </div>
+                    <div class="user-card">
+                        <strong>User:</strong> user@example.com / user123
+                    </div>
+                </div>
+                
+                <div class="login-form">
+                    <div class="form-group">
+                        <label for="userSelect">Quick Select User:</label>
+                        <select id="userSelect">
+                            <option value="">-- Select a demo user --</option>
+                            <option value="admin@example.com:admin123">Admin</option>
+                            <option value="mod@example.com:moderator123">Moderator</option>
+                            <option value="user@example.com:user123">User</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email:</label>
+                        <input type="email" id="email" placeholder="Enter email">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Password:</label>
+                        <input type="password" id="password" placeholder="Enter password">
+                    </div>
+                    
+                    <button onclick="login()">🔑 Login</button>
+                </div>
+                
+                <div id="loginResponse"></div>
+            </div>
+            
+            <!-- Protected Routes Section -->
+            <div class="section">
+                <h2>🛡️ Protected Routes</h2>
+                <p style="margin-bottom: 20px;">Click the buttons below to test access to protected routes:</p>
+                
+                <div class="routes-section">
+                    <div class="route-button admin" onclick="testRoute('/admin/dashboard')">
+                        <strong>Admin Dashboard</strong><br>
+                        <small>Access: Admin only</small>
+                    </div>
+                    
+                    <div class="route-button moderator" onclick="testRoute('/moderator/tools')">
+                        <strong>Moderator Tools</strong><br>
+                        <small>Access: Admin, Moderator</small>
+                    </div>
+                    
+                    <div class="route-button user" onclick="testRoute('/user/profile')">
+                        <strong>User Profile</strong><br>
+                        <small>Access: Admin, Moderator, User</small>
+                    </div>
+                </div>
+                
+                <div id="routeResponse"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentToken = null;
+        
+        // Auto-fill form when demo user is selected
+        document.getElementById('userSelect').addEventListener('change', function() {
+            const value = this.value;
+            if (value) {
+                const [email, password] = value.split(':');
+                document.getElementById('email').value = email;
+                document.getElementById('password').value = password;
+            }
+        });
+        
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+                showResponse('loginResponse', 'Please enter email and password', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    currentToken = data.token;
+                    showResponse('loginResponse', 
+                        `✅ Login Successful!\n\nUser: ${data.user.email}\nRole: ${data.user.role}\n\nToken: ${data.token}`, 
+                        'success'
+                    );
+                } else {
+                    showResponse('loginResponse', `❌ Login Failed: ${data.message}`, 'error');
+                }
+            } catch (error) {
+                showResponse('loginResponse', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+        
+        async function testRoute(path) {
+            if (!currentToken) {
+                showResponse('routeResponse', '❌ Please login first to test protected routes', 'error');
+                return;
+            }
+            
+            try {
+                const response = await fetch(path, {
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResponse('routeResponse', 
+                        `✅ Access Granted to ${path}\n\nStatus: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`, 
+                        'success'
+                    );
+                } else {
+                    showResponse('routeResponse', 
+                        `❌ Access Denied to ${path}\n\nStatus: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`, 
+                        'error'
+                    );
+                }
+            } catch (error) {
+                showResponse('routeResponse', `❌ Error accessing ${path}: ${error.message}`, 'error');
+            }
+        }
+        
+        function showResponse(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="response ${type}">${message}</div>`;
+        }
+    </script>
+</body>
+</html>
